@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.school.dao.TSchoolRoomDao">
+    
+	<sql id="tSchoolRoomColumns">
+		a.id AS "id",
+		a.room_code AS "roomCode",
+		a.room_desc AS "roomDesc",
+		a.school_code AS "school.schoolCode",
+		a.campus_id AS "campus.id",
+		a.use_desc AS "useDesc",
+		a.use_type AS "useType",
+		a.use_subject AS "course.id",
+		a.status AS status,
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		sc.school_name AS "school.schoolName",
+    	sc.id AS "school.id",
+    	so.name AS "campus.name",
+    	cs.subject_name AS "course.subjectName"
+	</sql>
+	
+	<sql id="tSchoolRoomJoins">
+		LEFT JOIN t_comm_school sc ON sc.school_code = a.school_code
+		LEFT JOIN sys_office so ON so.id = a.campus_id
+		left join t_comm_subject cs on a.use_subject = cs.id
+	</sql>
+	
+    
+	<select id="get" resultType="TSchoolRoom" >
+		SELECT 
+			<include refid="tSchoolRoomColumns"/>
+		FROM t_school_room a
+		<include refid="tSchoolRoomJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="TSchoolRoom" >
+		SELECT 
+			<include refid="tSchoolRoomColumns"/>
+		FROM t_school_room a
+		<include refid="tSchoolRoomJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.school_code = #{school.schoolCode} 
+			<if test="campus != null and campus.id != null and campus.id != ''">
+				AND a.campus_id = #{campus.id}
+			</if>
+			${sqlMap.dsf}
+			<!--<if test="campus != null and campus.id != null and campus.id != ''">
+				AND a.campus_id in #{campus.id}
+				<if test="dbName == 'oracle'">'('||#{campus.id}||')'</if>
+				<if test="dbName == 'mysql'">CONCAT('(', #{campus.id}, ')')</if>
+			</if>
+			 -->
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="TSchoolRoom" >
+		SELECT 
+			<include refid="tSchoolRoomColumns"/>
+		FROM t_school_room a
+		<include refid="tSchoolRoomJoins"/>
+		<where> 
+			<if test="campidStr != null and campus.id != null and campus.id != ''">
+				AND a.campus_id = #{campus.id}
+			</if>
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO t_school_room(
+			room_code,
+			room_desc,
+			school_code,
+			campus_id,
+			use_desc,
+			use_type,
+			use_subject,
+			status,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{roomCode},
+			#{roomDesc},
+			#{school.schoolCode},
+			#{campus.id},
+			#{useDesc},
+			#{useType},
+			#{course.id},
+			#{status},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE t_school_room SET 	
+			room_code = #{roomCode},
+			room_desc = #{roomDesc},
+			campus_id = #{campus.id},
+			use_desc = #{useDesc},
+			use_type = #{useType},
+			use_subject = #{course.id},
+			status = #{status},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updatestatus">
+		UPDATE t_school_room SET status = #{status}
+		WHERE id = #{id}
+	</update>
+	 
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM t_school_room
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE t_school_room SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="TSchoolRoom" statementType="STATEMENT">
+		select * FROM t_school_room  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

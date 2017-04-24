@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.subject.dao.TCourseClassDao">
+    
+	<sql id="tCourseClassColumns">
+		a.id AS "id",
+		a.school_id AS "schoolId",
+		a.campus_id AS "campus.id",
+		a.subject_id AS "subject.id",
+		a.class_code AS "classCode",
+		a.class_desc AS "classDesc",
+		a.class_type AS "classType",
+		a.charge_type AS "chargeType",
+		a.course_desc AS "courseDesc",
+		a.total_stu AS "totalStu",
+		a.stu_num AS "stuNum",
+		a.recruit AS "recruit",
+		a.slot AS "slot",
+		a.slotdesc AS "slotdesc",
+		a.begin_date AS "beginDate",
+		a.class_hour AS "classHour",
+		a.class_min AS "classMin",
+		a.week AS "week",
+		a.begintime AS "begintime",
+		a.endtime AS "endtime",
+		a.teactime AS "teactime",
+		a.teacher_id AS "teacher.id",
+		a.teacher_name AS "teacher.name",
+		a.room_id AS "room.id",
+		a.room_desc AS "room.roomDesc",
+		a.cost AS "cost",
+		a.percost AS "percost",
+		a.status AS "status",
+		a.iscreate AS "iscreate",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		so.name AS "campus.name",
+		cs.subject_name AS "subject.subjectName"
+	</sql>
+	
+	<sql id="tCourseClassJoins">
+	LEFT JOIN sys_office so ON so.id = a.campus_id
+	left join t_comm_subject cs on a.subject_id = cs.id
+	</sql>
+	
+    
+	<select id="get" resultType="TCourseClass" >
+		SELECT 
+			<include refid="tCourseClassColumns"/>
+		FROM t_course_class a
+		<include refid="tCourseClassJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="getCount" resultType="TCourseClass" >
+		SELECT count(*) "totalStu"
+		FROM t_course_class a
+		WHERE a.school_id = #{schoolId} and date_format(create_date,'%Y') = #{classDesc}
+	</select>
+	
+	<select id="findList" resultType="TCourseClass" >
+		SELECT 
+			<include refid="tCourseClassColumns"/>
+		FROM t_course_class a
+		<include refid="tCourseClassJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.school_id = #{schoolId}
+			<if test="campus != null and campus.id != null and campus.id != ''">
+				AND a.campus_id = #{campus.id}
+			</if>
+			<if test="subject != null and subject.id != null and subject.id != ''">
+				AND a.subject_id = #{subject.id}
+			</if>
+			<if test="classDesc != null and classDesc != ''">
+				AND a.class_desc LIKE 
+					<if test="dbName == 'oracle'">'%'||#{classDesc}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{classDesc}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{classDesc},'%')</if>
+			</if>
+			<if test="classType != null and classType != ''">
+				AND a.class_type = #{classType}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+			<if test="teacher != null and teacher.id != null and teacher.id != ''">
+				AND a.teacher_id = #{teacher.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findListForEnter" resultType="TCourseClass" >
+		SELECT 
+			<include refid="tCourseClassColumns"/>
+		FROM t_course_class a
+		<include refid="tCourseClassJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.school_id = #{schoolId} and (a.status = 2 or a.status = 3)
+			<if test="campus != null and campus.id != null and campus.id != ''">
+				AND a.campus_id = #{campus.id}
+			</if>
+			<if test="subject != null and subject.id != null and subject.id != ''">
+				AND a.subject_id = #{subject.id}
+			</if>
+			<if test="classDesc != null and classDesc != ''">
+				AND a.class_desc LIKE 
+					<if test="dbName == 'oracle'">'%'||#{classDesc}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{classDesc}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{classDesc},'%')</if>
+			</if>
+			<if test="classType != null and classType != ''">
+				AND a.class_type = #{classType}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="TCourseClass" >
+		SELECT 
+			<include refid="tCourseClassColumns"/>
+		FROM t_course_class a
+		<include refid="tCourseClassJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.school_id = #{schoolId}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findListByIds" resultType="TCourseClass" >
+		SELECT 
+			<include refid="tCourseClassColumns"/>
+		FROM t_course_class a
+		<include refid="tCourseClassJoins"/>
+		<where>
+			a.id in (#{findListByIds})
+		</where>		
+		<choose>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO t_course_class(
+			id,
+			school_id,
+			campus_id,
+			subject_id,
+			class_code,
+			class_desc,
+			class_type,
+			charge_type,
+			course_desc,
+			total_stu,
+			stu_num,
+			recruit,
+			slot,
+			slotdesc,
+			begin_date,
+			class_hour,
+			class_min,
+			week,
+			begintime,
+			endtime,
+			teactime,
+			teacher_id,
+			teacher_name,
+			room_id,
+			room_desc,
+			cost,
+			percost,
+			status,
+			iscreate,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{schoolId},
+			#{campus.id},
+			#{subject.id},
+			#{classCode},
+			#{classDesc},
+			#{classType},
+			#{chargeType},
+			#{courseDesc},
+			#{totalStu},
+			#{stuNum},
+			#{recruit},
+			#{slot},
+			#{slotdesc},
+			#{beginDate},
+			#{classHour},
+			#{classMin},
+			#{week},
+			#{begintime},
+			#{endtime},
+			#{teactime},
+			#{teacher.id},
+			#{teacher.name},
+			#{room.id},
+			#{room.roomDesc},
+			#{cost},
+			#{percost},
+			#{status},
+			#{iscreate},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE t_course_class SET 	
+			school_id = #{schoolId},
+			campus_id = #{campus.id},
+			subject_id = #{subject.id},
+			class_code = #{classCode},
+			class_desc = #{classDesc},
+			class_type = #{classType},
+			charge_type = #{chargeType},
+			course_desc = #{courseDesc},
+			total_stu = #{totalStu},
+			stu_num = #{stuNum},
+			recruit = #{recruit},
+			slot = #{slot},
+			slotdesc = #{slotdesc},
+			begin_date = #{beginDate},
+			class_hour = #{classHour},
+			class_min = #{classMin},
+			week = #{week},
+			begintime = #{begintime},
+			endtime = #{endtime},
+			teactime = #{teactime},
+			teacher_id = #{teacher.id},
+			teacher_name = #{teacher.name},
+			room_id = #{room.id},
+			room_desc = #{room.roomDesc},
+			cost = #{cost},
+			percost = #{percost},
+			status = #{status},
+			iscreate = #{iscreate},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateIsCreate">
+		UPDATE t_course_class SET iscreate = #{iscreate}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateStatus">
+		UPDATE t_course_class SET status = #{status}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateStuNum">
+		UPDATE t_course_class SET stu_num = #{stuNum}
+		WHERE id = #{id}
+	</update>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM t_course_class
+		WHERE id = #{id}
+	</update>
+	 
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE t_course_class SET del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="TCourseClass" statementType="STATEMENT">
+		select * FROM t_course_class  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

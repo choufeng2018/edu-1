@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.teaching.dao.TClassStudentCheckDao">
+    
+	<sql id="tClassStudentCheckColumns">
+		a.id AS "id",
+		a.tt_id AS "tCourseTimetable.id",
+		a.student_id AS "studentId",
+		a.student_name AS "studentName",
+		a.bkstatus AS "bkstatus",
+		a.status AS "status",
+		a.type AS "type",
+		a.can_makeup AS "canmakeup",
+		a.hope_date AS "hopedate",
+		a.parent_id AS "parent.id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		tt.class_id AS "tCourseTimetable.courseclass.id",
+		tt.class_desc AS "tCourseTimetable.courseclass.classDesc",
+		tt.course_date AS "tCourseTimetable.courseDate",
+		tt.teacher_id AS "tCourseTimetable.teacher.id",
+		tt.teacher_name AS "tCourseTimetable.teacher.name",
+		tt.begin_time AS "tCourseTimetable.beginTime",
+		tt.end_time AS "tCourseTimetable.endTime",
+		tt.status  AS "tCourseTimetable.status"
+	</sql>
+	
+	<sql id="tClassStudentCheckJoins">
+		left join t_course_timetable tt on tt.id = a.tt_id
+	</sql>
+	
+	<sql id="tClassStudentCheckJoins1">
+		right join t_course_timetable tt on tt.id = a.tt_id
+	</sql>
+    
+	<select id="get" resultType="TClassStudentCheck" >
+		SELECT 
+			<include refid="tClassStudentCheckColumns"/>
+		FROM t_class_student_check a
+		<include refid="tClassStudentCheckJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findByParentId" resultType="TClassStudentCheck" >
+		SELECT 
+			<include refid="tClassStudentCheckColumns"/>
+		FROM t_class_student_check a
+		<include refid="tClassStudentCheckJoins"/>
+		WHERE a.parent_id = #{parentid}
+	</select>
+	
+	<select id="getByTtIdAndStuId" resultType="TClassStudentCheck" >
+		SELECT 
+			<include refid="tClassStudentCheckColumns"/>
+		FROM t_class_student_check a
+		<include refid="tClassStudentCheckJoins"/>
+		WHERE a.tt_id = #{tCourseTimetable.id} and a.student_id=#{studentId}
+	</select>
+	
+	<select id="findListByTtid" resultType="TClassStudentCheck" >
+		<!-- SELECT 
+			t.id AS "tCourseTimetable.id",
+			a.student_id AS "studentId",
+			a.name AS "studentName",
+			"1" AS "status"
+		FROM t_class_student a, t_course_timetable t
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and t.del_flag = #{DEL_FLAG_NORMAL} 
+			and t.class_id = a.class_id and t.id = #{tCourseTimetable.id}
+		</where> -->
+		SELECT 
+			t.id AS "tCourseTimetable.id",
+			a.student_id AS "studentId",
+			a.name AS "studentName",
+			c.status AS "status",
+			c.remarks AS "remarks"
+		FROM t_course_timetable t
+		left join t_class_student a on t.class_id = a.class_id and a.del_flag = #{DEL_FLAG_NORMAL}
+		left join t_class_student_check c on c.tt_id = t.id and c.student_id = a.student_id
+		<where>
+			t.del_flag = #{DEL_FLAG_NORMAL} 
+			and t.id = #{tCourseTimetable.id}
+		</where>
+		<choose>
+			<otherwise>
+				ORDER BY a.id
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findListForMissed" resultType="TClassStudentCheck" >
+		SELECT 
+			t.id AS "tCourseTimetable.id",
+			t.course_date AS "tCourseTimetable.courseDate",
+			t.begin_time AS "tCourseTimetable.beginTime",
+			t.end_time AS "tCourseTimetable.endTime",
+			a.student_id AS "studentId",
+			a.name AS "studentName",
+			c.status AS "status",
+			c.remarks AS "remarks"
+		FROM t_course_timetable t
+		left join t_class_student a on t.class_id = a.class_id and a.del_flag = #{DEL_FLAG_NORMAL} 
+			and a.student_id = #{studentId} and a.class_id = #{tCourseTimetable.courseclass.id}
+		left join t_class_student_check c on c.tt_id = t.id and c.student_id = a.student_id 
+		<where>
+			t.del_flag = #{DEL_FLAG_NORMAL} and t.status = 1 and t.class_id = #{tCourseTimetable.courseclass.id}
+			and c.status is null
+		</where>
+		<choose>
+			<otherwise>
+				ORDER BY t.course_date
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findList" resultType="TClassStudentCheck" >
+		SELECT 
+			<include refid="tClassStudentCheckColumns"/>
+		FROM t_class_student_check a
+		<include refid="tClassStudentCheckJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and tt.school_id = #{tCourseTimetable.schoolId}
+			${sqlMap.dsf}
+			<if test="tCourseTimetable != null and tCourseTimetable.id != null and tCourseTimetable.id != ''">
+				AND a.tt_id = #{tCourseTimetable.id}
+			</if>
+			<if test="studentId != null and studentId != ''">
+				AND a.student_id = #{studentId}
+			</if>
+			<if test="studentName != null and studentName != ''">
+				AND a.student_name = #{studentName}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+			<if test="canmakeup != null and canmakeup != ''">
+				AND a.can_makeup = #{canmakeup}
+			</if>
+			<if test="tCourseTimetable != null and tCourseTimetable.courseDate != null">
+				AND tt.course_date = #{tCourseTimetable.courseDate}
+			</if>
+			<if test="tCourseTimetable != null and tCourseTimetable.campusId != null and tCourseTimetable.campusId != ''">
+				AND tt.campus_id = #{tCourseTimetable.campusId}
+			</if>
+			<if test="tCourseTimetable != null and tCourseTimetable.courseclass != null and tCourseTimetable.courseclass.id != null and tCourseTimetable.courseclass.id != ''">
+				AND tt.class_id = #{tCourseTimetable.courseclass.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findPageForMissed" resultType="TClassStudentCheck" >
+		SELECT 
+			<include refid="tClassStudentCheckColumns"/>, 
+			cc.class_type as "tCourseTimetable.courseclass.classType",
+			sc.tt_id AS "parent.tCourseTimetable.id",
+			sc.status AS "parent.status",
+			sc.create_by AS "parent.createBy.id",
+			sc.create_date AS "parent.createDate",
+			sc.update_by AS "parent.updateBy.id",
+			sc.update_date AS "parent.updateDate",
+			tc.class_id AS "parent.tCourseTimetable.courseclass.id",
+			tc.class_desc AS "parent.tCourseTimetable.courseclass.classDesc",
+			tc.course_date AS "parent.tCourseTimetable.courseDate",
+			tc.teacher_id AS "parent.tCourseTimetable.teacher.id",
+			tc.teacher_name AS "parent.tCourseTimetable.teacher.name",
+			tc.begin_time AS "parent.tCourseTimetable.beginTime",
+			tc.end_time AS "parent.tCourseTimetable.endTime",
+			tc.room_id AS "parent.tCourseTimetable.room.id",
+			tc.room_desc AS "parent.tCourseTimetable.room.roomDesc",
+			tc.status  AS "parent.tCourseTimetable.status"
+		FROM t_class_student_check a
+		<include refid="tClassStudentCheckJoins"/>
+		left join t_course_class cc on cc.id = tt.class_id 
+		left join t_class_student_check sc on sc.parent_id = a.id
+		left join t_course_timetable tc on tc.id = sc.tt_id
+		<where>
+			cc.class_type=2 and a.del_flag = #{DEL_FLAG_NORMAL} and tt.school_id = #{tCourseTimetable.schoolId} AND tt.campus_id = #{tCourseTimetable.campusId}
+			<if test="studentId != null and studentId != ''">
+				AND a.student_id = #{studentId}
+			</if>
+			<if test="studentName != null and studentName != ''">
+				AND a.student_name = #{studentName}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+			<if test="canmakeup != null and canmakeup != ''">
+				AND a.can_makeup = #{canmakeup}
+			</if>
+			<if test="tCourseTimetable != null and tCourseTimetable.courseDate != null">
+				AND tt.course_date = #{tCourseTimetable.courseDate}
+			</if> 
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findPageForTran" resultType="TClassStudentCheck" >
+		SELECT 
+			<include refid="tClassStudentCheckColumns"/>, u.name as "createBy.name"
+		FROM t_class_student_check a
+		<include refid="tClassStudentCheckJoins1"/>
+		left join sys_user u on u.id = a.create_by
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} 
+			<if test="studentId != null and studentId != ''">
+				AND a.student_id = #{studentId}
+			</if>
+			<if test="tCourseTimetable != null and tCourseTimetable.courseclass != null and tCourseTimetable.courseclass.id != null and tCourseTimetable.courseclass.id != ''">
+				AND tt.class_id = #{tCourseTimetable.courseclass.id}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="TClassStudentCheck" >
+		SELECT 
+			<include refid="tClassStudentCheckColumns"/>
+		FROM t_class_student_check a
+		<include refid="tClassStudentCheckJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO t_class_student_check(
+			tt_id,
+			student_id,
+			student_name,
+			status,
+			bkstatus,
+			type,
+			can_makeup,
+			hope_date,
+			parent_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{tCourseTimetable.id},
+			#{studentId},
+			#{studentName},
+			#{status},
+			#{bkstatus},
+			#{type},
+			#{canmakeup},
+			#{hopedate},
+			#{parent.id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE t_class_student_check SET 	
+			status = #{status},
+			bkstatus = #{bkstatus},
+			can_makeup = #{canmakeup},
+			hope_date = #{hopedate},
+			parent_id = #{parent.id},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateBkStatus">
+		UPDATE t_class_student_check SET bkstatus = 1
+		WHERE id = #{id}
+	</update>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM t_class_student_check
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE t_class_student_check SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="TClassStudentCheck" statementType="STATEMENT">
+		select * FROM t_class_student_check  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

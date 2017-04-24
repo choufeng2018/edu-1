@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.schoollevel.dao.TCommSchoolLevelDao">
+
+    <resultMap id="levelResult" type="TCommSchoolLevel">
+		<id property="id" column="id" />
+		<result property="levelCode" column="levelCode" />
+		<result property="levelDesc" column="levelDesc" />
+		<result property="levelPrice" column="levelPrice" />
+		<result property="createBy.id" column="createBy.id" />
+		<result property="createDate" column="createDate" />
+		<result property="updateBy.id" column="updateBy.id" />
+		<result property="updateDate" column="updateDate" />
+		<result property="delFlag" column="delFlag" />
+		<result property="remarks" column="remarks" />
+		<collection property="menuList" ofType="Menu">
+			<id property="id" column="menuList.id" />
+		</collection>
+	</resultMap>
+    
+	<sql id="tCommSchoolLevelColumns">
+		a.id AS "id",
+		a.level_code AS "levelCode",
+		a.level_desc AS "levelDesc",
+		a.level_price AS "levelPrice",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="tCommSchoolLevelJoins">
+	</sql>
+	
+	<select id="get" resultMap="levelResult" >
+		SELECT 
+			<include refid="tCommSchoolLevelColumns"/>,
+			slm.menu_id AS "menuList.id"
+		FROM t_comm_school_level a
+		LEFT JOIN t_comm_school_level_menu slm ON slm.level_id = a.id
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultMap="levelResult" >
+		SELECT 
+			<include refid="tCommSchoolLevelColumns"/>
+		FROM t_comm_school_level a
+		<include refid="tCommSchoolLevelJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultMap="levelResult" >
+		SELECT 
+			<include refid="tCommSchoolLevelColumns"/>
+		FROM t_comm_school_level a
+		<include refid="tCommSchoolLevelJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO t_comm_school_level(
+			level_code,
+			level_desc,
+			level_price,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{levelCode},
+			#{levelDesc},
+			#{levelPrice},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<insert id="saveResource">
+		INSERT INTO t_comm_school_level_menu(level_id, menu_id)
+		<foreach collection="menuList" item="menu" separator=" union all ">
+			SELECT #{id}, #{menu.id} FROM dual
+		</foreach>
+	</insert>
+	
+	<update id="update">
+		UPDATE t_comm_school_level SET 	
+			level_code = #{levelCode},
+			level_desc = #{levelDesc},
+			level_price = #{levelPrice},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<delete id="deleteLevelMenu">
+		DELETE FROM t_comm_school_level_menu WHERE level_id = #{id}
+	</delete>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM t_comm_school_level
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE t_comm_school_level SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultMap="levelResult" statementType="STATEMENT">
+		select * FROM t_comm_school_level  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

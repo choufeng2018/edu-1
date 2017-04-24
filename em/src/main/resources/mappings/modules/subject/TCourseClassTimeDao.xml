@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.subject.dao.TCourseClassTimeDao">
+    
+	<sql id="tCourseClassTimeColumns">
+		a.id AS "id",
+		a.cs_id AS "csId.id",
+		a.week AS "week",
+		a.begintime AS "begintime",
+		a.endtime AS "endtime",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="tCourseClassTimeJoins">
+		LEFT JOIN t_course_class b ON b.id = a.cs_id
+	</sql>
+	
+    
+	<select id="get" resultType="TCourseClassTime" >
+		SELECT 
+			<include refid="tCourseClassTimeColumns"/>
+		FROM t_course_class_time a
+		<include refid="tCourseClassTimeJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	 
+	<select id="findListForTeac" resultType="TCourseClassTime" >
+		SELECT 
+			<include refid="tCourseClassTimeColumns"/>
+		FROM t_course_class_time a
+		<include refid="tCourseClassTimeJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and b.teacher_id=#{csId.teacher.id} and b.status!=4 and 
+			((a.begintime>=#{begintime} and a.begintime &lt;= #{endtime}) or (a.endtime>=#{begintime} and a.endtime &lt;= #{endtime}))
+		</where> 
+	</select>
+	
+	<select id="findList" resultType="TCourseClassTime" >
+		SELECT 
+			<include refid="tCourseClassTimeColumns"/>
+		FROM t_course_class_time a
+		<include refid="tCourseClassTimeJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="csId != null and csId != ''">
+				AND a.cs_id = #{csId.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="TCourseClassTime" >
+		SELECT 
+			<include refid="tCourseClassTimeColumns"/>
+		FROM t_course_class_time a
+		<include refid="tCourseClassTimeJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO t_course_class_time(
+			cs_id,
+			week,
+			begintime,
+			endtime,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{csId.id},
+			#{week},
+			#{begintime},
+			#{endtime},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE t_course_class_time SET
+			week = #{week},
+			begintime = #{begintime},
+			endtime = #{endtime},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM t_course_class_time
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE cs_id = #{csId}
+			</otherwise>
+		</choose>
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE t_course_class_time SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE cs_id = #{csId}
+			</otherwise>
+		</choose>
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="TCourseClassTime" statementType="STATEMENT">
+		select * FROM t_course_class_time  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

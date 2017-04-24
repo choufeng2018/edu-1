@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.em.dao.pay.TSchoolPayDao">
+    
+	<sql id="tSchoolPayColumns">
+		a.id AS "id",
+		a.school_code AS "school.schoolCode",
+		a.campus_code AS "campusCode",
+		a.buy_date AS "buyDate",
+		a.pay_count AS "payCount",
+		a.pay_type AS "payType",
+		a.pay_period AS "payPeriod",
+		a.beg_date AS "begDate",
+		a.end_date AS "endDate",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		cs.school_name AS "school.schoolName",
+    	cs.id AS "school.id",
+    	su.name AS "createBy.name"
+	</sql>
+	
+	<sql id="tSchoolPayJoins">
+		LEFT JOIN t_comm_school cs ON cs.school_code = a.school_code
+		left join sys_user su on su.id = a.create_by
+	</sql>
+	
+    
+	<select id="get" resultType="TSchoolPay" >
+		SELECT 
+			<include refid="tSchoolPayColumns"/>
+		FROM t_school_pay a
+		<include refid="tSchoolPayJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="TSchoolPay" >
+		SELECT 
+			<include refid="tSchoolPayColumns"/>
+		FROM t_school_pay a
+		<include refid="tSchoolPayJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="school != null and school.schoolCode != null and school.schoolCode != ''">
+				AND a.school_code = #{school.schoolCode}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="TSchoolPay" >
+		SELECT 
+			<include refid="tSchoolPayColumns"/>
+		FROM t_school_pay a
+		<include refid="tSchoolPayJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO t_school_pay(
+			school_code,
+			campus_code,
+			buy_date,
+			pay_count,
+			pay_type,
+			pay_period,
+			beg_date,
+			end_date,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{school.schoolCode},
+			#{campusCode},
+			#{buyDate},
+			#{payCount},
+			#{payType},
+			#{payPeriod},
+			#{begDate},
+			#{endDate},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE t_school_pay SET 	
+			school_code = #{school.schoolCode},
+			campus_code = #{campusCode},
+			buy_date = #{buyDate},
+			pay_count = #{payCount},
+			pay_type = #{payType},
+			pay_period = #{payPeriod},
+			beg_date = #{begDate},
+			end_date = #{endDate},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM t_school_pay
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE t_school_pay SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="TSchoolPay" statementType="STATEMENT">
+		select * FROM t_school_pay  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

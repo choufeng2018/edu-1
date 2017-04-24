@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.teaching.dao.TClassStudentQuitDao">
+    
+	<sql id="tClassStudentQuitColumns">
+		a.id AS "id",
+		a.school_id AS "schoolId",
+		a.campus_id AS "campusId",
+		a.cs_id AS "tClassStudent.id",
+		a.student_id AS "tClassStudent.student.id",
+		a.name AS "tClassStudent.student.name",
+		a.amount AS "tClassStudent.courseclass.cost",
+		a.per_amount AS "perAmount",
+		a.back_amount AS "backAmount",
+		a.class_all AS "tClassStudent.courseclass.classHour",
+		a.class_complete AS "classComplete",
+		a.class_rest AS "classRest",
+		a.class_missed AS "classMissed",
+		a.class_leave AS "classLeave",
+		a.class_add AS "classAdd",
+		a.user_id AS "user.id",
+		a.user_name AS "user.name",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		s.class_name AS "tClassStudent.courseclass.classDesc"
+	</sql>
+	
+	<sql id="tClassStudentQuitJoins">
+		LEFT JOIN sys_user user ON user.id = a.user_id
+		left join t_class_student s on s.id = a.cs_id
+	</sql>
+	
+    
+	<select id="get" resultType="TClassStudentQuit" >
+		SELECT 
+			<include refid="tClassStudentQuitColumns"/>
+		FROM t_class_student_quit a
+		<include refid="tClassStudentQuitJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="TClassStudentQuit" >
+		SELECT 
+			<include refid="tClassStudentQuitColumns"/>
+		FROM t_class_student_quit a
+		<include refid="tClassStudentQuitJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.school_id=#{schoolId} and a.campus_id=#{campusId}
+			<if test="tClassStudent != null and tClassStudent.student != null and tClassStudent.student.name!='' and tClassStudent.student.name!=null">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{tClassStudent.student.name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{tClassStudent.student.name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{tClassStudent.student.name},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="TClassStudentQuit" >
+		SELECT 
+			<include refid="tClassStudentQuitColumns"/>
+		FROM t_class_student_quit a
+		<include refid="tClassStudentQuitJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO t_class_student_quit(
+			school_id,
+			campus_id,
+			cs_id,
+			student_id,
+			name,
+			amount,
+			per_amount,
+			back_amount,
+			class_all,
+			class_complete,
+			class_rest,
+			class_missed,
+			class_leave,
+			class_add,
+			user_id,
+			user_name,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{schoolId},
+			#{campusId},
+			#{tClassStudent.id},
+			#{tClassStudent.student.id},
+			#{tClassStudent.student.name},
+			#{tClassStudent.courseclass.cost},
+			#{perAmount},
+			#{backAmount},
+			#{tClassStudent.courseclass.classHour},
+			#{classComplete},
+			#{classRest},
+			#{classMissed},
+			#{classLeave},
+			#{classAdd},
+			#{user.id},
+			#{user.name},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE t_class_student_quit SET 
+			amount = #{tClassStudent.courseclass.cost},
+			per_amount = #{perAmount},
+			back_amount = #{backAmount},
+			class_all = #{tClassStudent.courseclass.classHour},
+			class_complete = #{classComplete},
+			class_rest = #{classRest},
+			class_missed = #{classMissed},
+			class_leave = #{classLeave},
+			class_add = #{classAdd},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM t_class_student_quit
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE t_class_student_quit SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="TClassStudentQuit" statementType="STATEMENT">
+		select * FROM t_class_student_quit  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

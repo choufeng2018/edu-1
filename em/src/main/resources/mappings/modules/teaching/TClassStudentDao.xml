@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.teaching.dao.TClassStudentDao">
+    
+	<sql id="tClassStudentColumns">
+		a.id AS "id",
+		a.school_id AS "schoolId",
+		a.campus_id AS "campusId",
+		a.class_id AS "courseclass.id",
+		a.class_name AS "courseclass.classDesc",
+		a.student_id AS "student.id",
+		a.name AS "student.name",
+		a.ispay AS "ispay",
+		a.paytype AS "paytype",
+		a.zks AS "zks",
+		a.ywcks AS "ywcks",
+		a.amount AS "amount",
+		a.balance AS "balance",
+		a.renewcount AS "renewcount",
+		a.status AS "status",
+		a.employee_id AS "cc.id",
+		a.employee_name AS "cc.name",
+		a.parent_id AS "parent.id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		s.tel AS "student.tel",
+		c.begin_Date AS "courseclass.beginDate",
+		c.status AS "courseclass.status",
+		c.class_hour AS "courseclass.classHour",
+		c.percost AS "courseclass.percost",
+		c.teacher_id AS "courseclass.teacher.id",
+		c.teacher_name AS "courseclass.teacher.name",
+		c.room_id AS "courseclass.room.id",
+		c.class_type AS "courseclass.classType",
+		c.room_desc AS "courseclass.room.roomDesc"
+	</sql>
+	
+	<sql id="tClassStudentColumns1">
+		a.id AS "id",
+		a.school_id AS "schoolId",
+		a.campus_id AS "campusId",
+		a.class_id AS "courseclass.id",
+		a.class_name AS "courseclass.classDesc",
+		a.student_id AS "student.id",
+		a.name AS "student.name",
+		a.ispay AS "ispay",
+		a.paytype AS "paytype",
+		a.zks AS "zks",
+		a.ywcks  AS "ywcks",
+		a.amount AS "amount",
+		a.balance AS "balance",
+		a.renewcount AS "renewcount",
+		a.status AS "status",
+		a.employee_id AS "cc.id",
+		a.employee_name AS "cc.name",
+		a.parent_id AS "parent.id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		s.tel AS "student.tel",
+		c.begin_Date AS "courseclass.beginDate",
+		c.status AS "courseclass.status",
+		c.class_hour AS "courseclass.classHour",
+		c.teacher_id AS "courseclass.teacher.id",
+		c.teacher_name AS "courseclass.teacher.name",
+		st.class_name AS "parent.courseclass.classDesc",
+		st.zks AS "parent.zks", 
+		st.ywcks AS "parent.ywcks", 
+		st.amount AS "parent.amount", 
+		st.balance AS "parent.balance",
+		c1.status AS "parent.courseclass.status",
+		c1.class_hour AS "parent.courseclass.classHour",
+		c1.teacher_name AS "parent.courseclass.teacher.name"
+	</sql>
+	
+	<sql id="tClassStudentJoins">
+	left join t_school_student s on s.id = a.student_id
+	left join t_course_class c on c.id = a.class_id
+	</sql>
+	
+	<sql id="tClassStudentJoins1">
+	left join t_class_student st on st.id = a.parent_id
+	left join t_course_class c1 on c1.id = st.class_id
+	</sql>
+    
+	<select id="get" resultType="TClassStudent" >
+		SELECT 
+			<include refid="tClassStudentColumns"/>
+		FROM t_class_student a
+		<include refid="tClassStudentJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	 
+	<select id="getByStudentIdAndClassId" resultType="TClassStudent" >
+		SELECT 
+			<include refid="tClassStudentColumns"/>
+		FROM t_class_student a
+		<include refid="tClassStudentJoins"/>
+		WHERE a.class_id = #{courseclass.id} AND a.student_id = #{student.id} and a.status!=2
+	</select>
+	
+	<select id="findPageForView" resultType="TClassStudent" >
+		SELECT 
+			<include refid="tClassStudentColumns"/>
+		FROM t_class_student a
+		<include refid="tClassStudentJoins"/>
+		WHERE a.student_id = #{student.id}
+	</select>
+	
+	<select id="findList" resultType="TClassStudent" >
+		SELECT 
+			<include refid="tClassStudentColumns"/>
+		FROM t_class_student a
+		<include refid="tClassStudentJoins"/>
+		<!-- -->
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.school_id = #{schoolId} and a.campus_id = #{campusId}
+			<if test="courseclass!=null and courseclass.classType != null and courseclass.classType != ''">
+				AND c.class_type = #{courseclass.classType}
+			</if> 
+			<if test="courseclass!=null and courseclass.id != null and courseclass.id != ''">
+				AND a.class_id = #{courseclass.id}
+			</if>
+			<if test="courseclass!=null and courseclass.subject != null and courseclass.subject.id != null and courseclass.subject.id != ''">
+				AND c.subject_id = #{courseclass.subject.id}
+			</if>
+			<if test="student !=null and student.name != null and student.name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{student.name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{student.name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{student.name},'%')</if>
+			</if>
+			<if test="ispay != null and ispay != ''">
+				AND a.ispay = #{ispay}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findListByStatus" resultType="TClassStudent" >
+		SELECT 
+			<include refid="tClassStudentColumns"/>
+		FROM t_class_student a
+		<include refid="tClassStudentJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.school_id = #{schoolId} and a.campus_id = #{campusId} 
+			${sqlMap.dsf}
+			<if test="courseclass!=null and courseclass.id != null and courseclass.id != ''">
+				AND a.class_id = #{courseclass.id}
+			</if>
+			<if test="student !=null and student.name != null and student.name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{student.name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{student.name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{student.name},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findListByType" resultType="TClassStudent" >
+		SELECT 
+			<include refid="tClassStudentColumns"/>
+		FROM t_class_student a
+		<include refid="tClassStudentJoins"/>
+		and c.class_type=2
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.school_id = #{schoolId} and a.campus_id = #{campusId} 
+			<if test="courseclass!=null and courseclass.id != null and courseclass.id != ''">
+				AND a.class_id = #{courseclass.id}
+			</if>
+			<if test="student !=null and student.name != null and student.name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{student.name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{student.name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{student.name},'%')</if>
+			</if>
+			<if test="ispay != null and ispay != ''">
+				AND a.ispay = #{ispay}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findPageForTran" resultType="TClassStudent" >
+		SELECT 
+			<include refid="tClassStudentColumns1"/>
+		FROM t_class_student a
+		<include refid="tClassStudentJoins"/>
+		<include refid="tClassStudentJoins1"/>
+		<where>
+			<!-- c.class_type=2 and  -->
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.school_id = #{schoolId} and a.campus_id = #{campusId} and a.parent_id is not null
+			<if test="courseclass!=null and courseclass.id != null and courseclass.id != ''">
+				AND a.class_id = #{courseclass.id}
+			</if>
+			<if test="student !=null and student.name != null and student.name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{student.name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{student.name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{student.name},'%')</if>
+			</if>
+			<if test="ispay != null and ispay != ''">
+				AND a.ispay = #{ispay}
+			</if> 
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findPageForLeave" resultType="TClassStudent" >
+		SELECT 
+			<include refid="tClassStudentColumns"/>,
+			aa.leavecount leavecount
+		FROM t_class_student a
+		<include refid="tClassStudentJoins"/>
+		left join (
+			select ct.class_id, student_id, count(*) leavecount 
+			from t_class_student_check sc, t_course_timetable ct, t_course_class cc
+			where sc.tt_id=ct.id and sc.status=3
+				and cc.id=ct.class_id and ct.school_id = #{schoolId} and ct.campus_id = #{campusId} 
+			group by ct.class_id, sc.student_id
+		) aa on aa.student_id = a.student_id and aa.class_id = a.class_id 
+		<where>
+			${sqlMap.dsf} 
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.school_id = #{schoolId} and a.campus_id = #{campusId} 
+			<if test="courseclass!=null and courseclass.id != null and courseclass.id != ''">
+				AND a.class_id = #{courseclass.id}
+			</if>
+			<if test="student !=null and student.name != null and student.name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{student.name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{student.name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{student.name},'%')</if>
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="TClassStudent" >
+		SELECT 
+			<include refid="tClassStudentColumns"/>
+		FROM t_class_student a
+		<include refid="tClassStudentJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO t_class_student(
+			school_id,
+			campus_id,
+			class_id,
+			class_name,
+			student_id,
+			name,
+			ispay,
+			paytype,
+			zks,
+			ywcks,
+			amount,
+			balance,
+			renewcount,
+			status,
+			employee_id,
+			employee_name,
+			parent_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{schoolId},
+			#{campusId},
+			#{courseclass.id},
+			#{courseclass.classDesc},
+			#{student.id},
+			#{student.name},
+			#{ispay},
+			#{paytype},
+			#{zks},
+			#{ywcks},
+			#{amount},
+			#{balance},
+			#{renewcount},
+			#{status},
+			#{cc.id},
+			#{cc.name},
+			#{parent.id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE t_class_student SET 	
+			school_id = #{schoolId},
+			campus_id = #{campusId},
+			class_id = #{courseclass.id},
+			class_name = #{courseclass.classDesc},
+			student_id = #{student.id},
+			name = #{student.name},
+			ispay = #{ispay},
+			paytype = #{paytype},
+			zks = #{zks},
+			ywcks = #{ywcks},
+			amount = #{amount},
+			balance = #{balance},
+			renewcount = #{renewcount},
+			status = #{status},
+			employee_id = #{cc.id},
+			employee_name = #{cc.name},
+			parent_id = #{parent.id},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateStatus">
+		UPDATE t_class_student SET 	
+			status = #{status},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateRenewCount">
+		UPDATE t_class_student SET renewcount = #{renewcount}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateYwc">
+		UPDATE t_class_student a SET ywcks = ywcks + 1
+		<where>
+			${sqlMap.dsf}
+		</where>
+	</update>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM t_class_student
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE t_class_student SET del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="TClassStudent" statementType="STATEMENT">
+		select * FROM t_class_student  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

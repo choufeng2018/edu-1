@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.em.dao.school.TCommSchoolDao">
+    
+	<sql id="tCommSchoolColumns">
+		a.id AS "id",
+		a.school_code AS "schoolCode",
+		a.school_name AS "schoolName",
+		a.province AS "province.id",
+		a.city AS "city.id",
+		a.region AS "region.id",
+		a.address AS "address",
+		a.contact AS "contact",
+		a.tel AS "tel",
+		a.email AS "email",
+		a.summary AS "summary",
+		a.homepage AS "homepage",
+		a.zjphoto AS "zjphoto",
+		a.school_level AS "tSchoolLevel.id",
+		a.school_type AS "schoolType",
+		a.school_status AS "schoolStatus",
+		a.end_date AS "endDate",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		pa.name AS "province.name",
+		ca.name AS "city.name",
+		ra.name AS "region.name",
+		sl.level_desc AS "tSchoolLevel.levelDesc",
+		sl.level_price AS "tSchoolLevel.levelPrice"
+	</sql>
+	
+	<sql id="tCommSchoolJoins">
+		LEFT JOIN sys_area pa ON pa.id = a.province
+		LEFT JOIN sys_area ca ON ca.id = a.city
+		LEFT JOIN sys_area ra ON ra.id = a.region
+		LEFT JOIN t_comm_school_level sl ON sl.id = a.school_level
+	</sql>
+	
+    
+	<select id="get" resultType="TCommSchool" >
+		SELECT 
+			<include refid="tCommSchoolColumns"/>
+		FROM t_comm_school a
+		<include refid="tCommSchoolJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="TCommSchool" >
+		SELECT 
+			<include refid="tCommSchoolColumns"/>
+		FROM t_comm_school a
+		<include refid="tCommSchoolJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="province != null and province.id != null and province.id != ''">
+				AND a.province = #{province.id}
+			</if>
+			<if test="city != null and city.id != null and city.id != ''">
+				AND a.city = #{city.id}
+			</if>
+			<if test="region != null and region.id != null and region.id != ''">
+				AND a.region = #{region.id}
+			</if>
+			<if test="schoolName != null and schoolName != ''">
+				AND a.school_name = #{schoolName}
+			</if>
+			<if test="schoolStatus != null">
+				AND a.school_status = #{schoolStatus}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="getCount" resultType="TCommSchool" >
+		SELECT count(*) schoolStatus 
+		FROM t_comm_school a
+		<where>
+			1=1
+			<if test="city != null and city.id != null and city.id != ''">
+				and a.city = #{city.id}
+			</if>
+			<if test="tel != null and tel != ''">
+				and a.tel = #{tel}
+			</if>
+			<if test="email != null and email != ''">
+				and a.email = #{email}
+			</if>
+		</where>
+	</select>
+	
+	<select id="findAllList" resultType="TCommSchool" >
+		SELECT 
+			<include refid="tCommSchoolColumns"/>
+		FROM t_comm_school a
+		<include refid="tCommSchoolJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO t_comm_school( 
+			school_code,
+			school_name,
+			province,
+			city,
+			region,
+			address,
+			contact,
+			tel,
+			email,
+			summary,
+			homepage,
+			zjphoto,
+			school_level,
+			school_type,
+			school_status,
+			end_date,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES ( 
+			#{schoolCode},
+			#{schoolName},
+			#{province.id},
+			#{city.id},
+			#{region.id},
+			#{address},
+			#{contact},
+			#{tel},
+			#{email},
+			#{summary},
+			#{homepage},
+			#{zjphoto},
+			#{tSchoolLevel.id},
+			#{schoolType},
+			#{schoolStatus},
+			#{endDate},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE t_comm_school SET 	
+			school_code = #{schoolCode},
+			school_name = #{schoolName},
+			province = #{province.id},
+			city = #{city.id},
+			region = #{region.id},
+			address = #{address},
+			contact = #{contact},
+			tel = #{tel},
+			email = #{email},
+			summary = #{summary},
+			homepage = #{homepage},
+			zjphoto = #{zjphoto},
+			school_level = #{tSchoolLevel.id},
+			school_type = #{schoolType},
+			end_date = #{endDate},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateSchoolEndDate">
+		UPDATE t_comm_school SET 	
+			end_date = #{endDate}
+		WHERE school_code = #{schoolCode}
+	</update>
+	
+	<update id="enableAndDisable">
+		UPDATE t_comm_school SET school_status = #{schoolStatus}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateSchoolLevel">
+		UPDATE t_comm_school SET school_level = #{tSchoolLevel.id}
+		WHERE id = #{id}
+	</update>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM t_comm_school
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE t_comm_school SET del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="TCommSchool" statementType="STATEMENT">
+		select * FROM t_comm_school  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

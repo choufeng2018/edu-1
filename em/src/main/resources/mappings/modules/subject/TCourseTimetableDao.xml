@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.subject.dao.TCourseTimetableDao">
+    
+	<sql id="tCourseTimetableColumns">
+		a.id AS "id",
+		a.school_id AS "schoolId",
+		a.campus_id AS "campusId",
+		a.subject_id AS "subject.id",
+		a.class_id AS "courseclass.id",
+		a.class_desc AS "courseclass.classDesc",
+		a.course_date AS "courseDate",
+		a.begin_time AS "beginTime",
+		a.end_time AS "endTime",
+		a.room_id AS "room.id",
+		a.room_desc AS "room.roomDesc",
+		a.type AS "type",
+		a.status AS "status",
+		a.teacher_id AS "teacher.id",
+		a.teacher_name AS "teacher.name",
+		t.tel AS "teacher.tel",
+		a.p_id AS "pId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		cs.subject_name AS "subject.subjectName"
+	</sql>
+	 
+	<sql id="tCourseTimetableJoins">
+	left join t_school_teacher t on t.id = a.teacher_id
+	left join t_comm_subject cs on a.subject_id = cs.id
+	</sql>
+	 
+	<select id="get" resultType="TCourseTimetable" >
+		SELECT 
+			<include refid="tCourseTimetableColumns"/>
+		FROM t_course_timetable a
+		<include refid="tCourseTimetableJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="TCourseTimetable" >
+		SELECT 
+			<include refid="tCourseTimetableColumns"/>,
+			cc.begintime AS "courseclass.begintime",
+			cc.endtime AS "courseclass.endtime"
+		FROM t_course_timetable a
+		<include refid="tCourseTimetableJoins"/>
+		left join t_course_class cc on a.class_id = cc.id
+		${sqlMap.dsf}
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.school_id = #{schoolId}
+			<if test="campusId != null and campusId != ''">
+				AND a.campus_id = #{campusId}
+			</if>
+			<if test="courseDate != null and courseDate != ''">
+				AND a.course_date = #{courseDate}
+			</if>
+			<if test="room != null and room.id != null and room.id != ''">
+				AND a.room_desc = #{room.roomDesc}
+			</if>
+			<if test="courseclass != null and courseclass.id != null and courseclass.id != ''">
+				AND a.class_id = #{courseclass.id}
+			</if>
+			<if test="subject != null and subject.id != null and subject.id != ''">
+				AND a.subject_id = #{subject.id}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.course_date, a.begin_time
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findListforpay" resultType="TCourseTimetable" >
+		SELECT 
+			<include refid="tCourseTimetableColumns"/>
+		FROM t_course_timetable a
+		<include refid="tCourseTimetableJoins"/>
+		<where>
+			a.class_id = #{courseclass.id} 
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.course_date desc, a.begin_time desc
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findPageForMissed" resultType="TCourseTimetable" >
+		SELECT 
+			<include refid="tCourseTimetableColumns"/>,
+			cc.begintime AS "courseclass.begintime",
+			cc.endtime AS "courseclass.endtime"
+		FROM t_course_timetable a
+		<include refid="tCourseTimetableJoins"/>
+		left join t_course_class cc on a.class_id = cc.id
+		${sqlMap.dsf}
+		<where>
+			cc.class_type=2 and a.del_flag = #{DEL_FLAG_NORMAL} and a.school_id = #{schoolId}
+			<if test="campusId != null and campusId != ''">
+				AND a.campus_id = #{campusId}
+			</if>
+			<if test="courseDate != null and courseDate != ''">
+				AND a.course_date = #{courseDate}
+			</if>
+			<if test="courseclass != null and courseclass.id != null and courseclass.id != ''">
+				AND a.class_id = #{courseclass.id}
+			</if>
+			<if test="subject != null and subject.id != null and subject.id != ''">
+				AND a.subject_id = #{subject.id}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.course_date, a.begin_time
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findPageForCheck" resultType="TCourseTimetable" >
+		SELECT 
+			<include refid="tCourseTimetableColumns"/>,
+			cc.stu_num AS "courseclass.stuNum"
+		FROM t_course_timetable a
+		<include refid="tCourseTimetableJoins"/>
+		left join t_course_class cc on cc.id = a.class_id 
+		<where>
+			cc.status>1 and a.del_flag = #{DEL_FLAG_NORMAL} and a.status!=3 and a.school_id = #{schoolId} and a.campus_id = #{campusId}
+			<if test="courseDate != null and courseDate != ''">
+				AND a.course_date = #{courseDate}
+			</if>
+			<if test="room != null and room.id != null and room.id != ''">
+				AND a.room_desc = #{room.roomDesc}
+			</if>
+			<if test="courseclass != null and courseclass.id != null and courseclass.id != ''">
+				AND a.class_id = #{courseclass.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.course_date, a.begin_time
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findListIsComplete" resultType="TCourseTimetable" >
+		SELECT 
+			a.id AS "id",
+			a.school_id AS "schoolId",
+			a.campus_id AS "campusId",
+			a.subject_id AS "subject.id",
+			a.class_id AS "courseclass.id",
+			a.class_desc AS "courseclass.classDesc",
+			a.course_date AS "courseDate",
+			a.begin_time AS "beginTime",
+			a.end_time AS "endTime",
+			a.room_id AS "room.id",
+			a.room_desc AS "room.roomDesc",
+			a.type AS "type",
+			a.status AS "status",
+			a.teacher_id AS "teacher.id",
+			a.teacher_name AS "teacher.name"
+		FROM t_course_timetable a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.status==2 AND a.class_id = #{courseclass.id}
+		</where> 
+	</select>
+	
+	<select id="findAllList" resultType="TCourseTimetable" >
+		SELECT 
+			<include refid="tCourseTimetableColumns"/>
+		FROM t_course_timetable a
+		<include refid="tCourseTimetableJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.school_id = #{schoolId}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.course_date
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO t_course_timetable(
+			school_id ,
+			campus_id,
+			subject_id,
+			class_id,
+			class_desc,
+			course_date,
+			begin_time,
+			end_time,
+			room_id,
+			room_desc,
+			type,
+			status,
+			teacher_id,
+			teacher_name,
+			p_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{schoolId},
+			#{campusId},
+			#{subject.id},
+			#{courseclass.id},
+			#{courseclass.classDesc},
+			#{courseDate},
+			#{beginTime},
+			#{endTime},
+			#{room.id},
+			#{room.roomDesc},
+			#{type},
+			#{status},
+			#{teacher.id},
+			#{teacher.name},
+			#{pId},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE t_course_timetable SET 	
+			class_id = #{courseclass.id},
+			class_desc = #{courseclass.classDesc},
+			course_date = #{courseDate},
+			begin_time = #{beginTime},
+			end_time = #{endTime},
+			room_id = #{room.id},
+			room_desc = #{room.roomDesc},
+			type = #{type},
+			status = #{status},
+			teacher_id = #{teacher.id},
+			teacher_name = #{teacher.name},
+			p_id = #{pId},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateStatus">
+		UPDATE t_course_timetable SET 	
+			status = #{status}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateRoom">
+		UPDATE t_course_timetable SET room_id = #{room.id}, room_desc = #{room.roomDesc}, type = #{type}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateTime">
+		UPDATE t_course_timetable 
+		SET course_date = #{courseDate},
+			begin_time = #{beginTime},
+			end_time = #{endTime},
+			type = #{type}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updatedelayTime">
+		UPDATE t_course_timetable 
+		SET course_date = date_add(course_date, interval #{shour} day), type = #{type}
+		WHERE class_id = #{courseclass.id} and course_date >= #{courseDate} and status=1
+	</update>
+	
+	<update id="updateTeacher">
+		UPDATE t_course_timetable SET teacher_id = #{teacher.id}, teacher_name = #{teacher.name}, type = #{type}
+		WHERE id = #{id}
+	</update>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM t_course_timetable WHERE id = #{id}
+	</update>
+	
+	<!--物理删除-->
+	<update id="deleteByClassid">
+		DELETE FROM t_course_timetable
+		WHERE class_id = #{classid}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE t_course_timetable SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="TCourseTimetable" statementType="STATEMENT">
+		select * FROM t_course_timetable  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

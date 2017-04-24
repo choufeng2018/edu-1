@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.school.dao.TSchoolStudentDao">
+    
+	<sql id="tSchoolStudentColumns">
+		a.id AS "id",
+		a.school_id AS "schoolId",
+		a.campus_id AS "campus.id",
+		a.account AS "account",
+		a.name AS "name",
+		a.password AS "password",
+		a.birthday AS "birthday",
+		a.sex AS "sex",
+		a.age AS "age",
+		a.wx AS "wx",
+		a.email AS "email",
+		a.tel AS "tel",
+		a.status AS "status",
+		a.subjectsid AS "subjectsid",
+		a.subjects AS "subjects",
+		a.inten_time AS "intenTime",
+		a.cc AS "cc.id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		so.name AS "campus.name",
+		su.name AS "cc.name"
+	</sql>
+	
+	<sql id="tSchoolStudentJoins">
+	LEFT JOIN sys_office so ON so.id = a.campus_id
+	LEFT JOIN sys_user su ON su.id = a.cc
+	</sql>
+	
+    
+	<select id="get" resultType="TSchoolStudent" >
+		SELECT 
+			<include refid="tSchoolStudentColumns"/>
+		FROM t_school_student a
+		<include refid="tSchoolStudentJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="TSchoolStudent" >
+		SELECT 
+			<include refid="tSchoolStudentColumns"/>
+		FROM t_school_student a
+		<include refid="tSchoolStudentJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.school_id = #{schoolId}
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<if test="campus != null and campus.id != '' and campus.id != null">
+				AND a.campus_id = #{campus.id}
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="TSchoolStudent" >
+		SELECT 
+			<include refid="tSchoolStudentColumns"/>
+		FROM t_school_student a
+		<include refid="tSchoolStudentJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO t_school_student(
+			school_id,
+			campus_id,
+			account,
+			name,
+			password,
+			birthday,
+			sex,
+			age,
+			wx,
+			email,
+			tel,
+			status,
+			subjectsid,
+			subjects,
+			inten_time,
+			cc,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{schoolId},
+			#{campus.id},
+			#{account},
+			#{name},
+			#{password},
+			#{birthday},
+			#{sex},
+			#{age},
+			#{wx},
+			#{email},
+			#{tel},
+			#{status},
+			#{subjectsid},
+			#{subjects},
+			#{intenTime},
+			#{cc.id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE t_school_student SET 	
+			school_id = #{schoolId},
+			campus_id = #{campus.id},
+			account = #{account},
+			name = #{name},
+			password = #{password},
+			birthday = #{birthday},
+			sex = #{sex},
+			age = #{age},
+			wx = #{wx},
+			email = #{email},
+			tel = #{tel},
+			status = #{status},
+			cc = #{cc.id},
+			subjectsid = #{subjectsid},
+			subjects = #{subjects},
+			inten_time = #{intenTime},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM t_school_student
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE t_school_student SET del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	 
+	<update id="updateStatus">
+		UPDATE t_school_student SET status = #{status}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="TSchoolStudent" statementType="STATEMENT">
+		select * FROM t_school_student where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

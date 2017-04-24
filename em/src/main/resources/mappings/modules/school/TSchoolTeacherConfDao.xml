@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.school.dao.TSchoolTeacherConfDao">
+    
+	<sql id="tSchoolTeacherConfColumns">
+		a.id AS "id",
+		t.id AS "teacher.id",
+		a.price AS "price",
+		a.cmin AS "cmin",
+		a.rmin AS "rmin",
+		a.ism AS "ism",
+		a.mtime AS "mtime",
+		a.emtime AS "emtime",
+		a.isa AS "isa",
+		a.atime AS "atime",
+		a.eatime AS "eatime",
+		a.isn AS "isn",
+		a.ntime AS "ntime",
+		a.entime AS "entime",
+		a.stu_count AS "stuCount",
+		a.mon as "mon",
+		a.tue as "tue",
+		a.wed as "wed",
+		a.thu as "thu",
+		a.fri as "fri",
+		a.sat as "sat",
+		a.sun as "sun",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		t.name AS "teacher.name"
+	</sql>
+	
+	<sql id="tSchoolTeacherConfJoins">
+	right join t_school_teacher t on t.id = a.t_id
+	</sql>
+	
+	<select id="get" resultType="TSchoolTeacherConf" >
+		SELECT 
+			<include refid="tSchoolTeacherConfColumns"/>
+		FROM t_school_teacher_conf a
+		<include refid="tSchoolTeacherConfJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="getByTid" resultType="TSchoolTeacherConf" >
+		SELECT 
+			<include refid="tSchoolTeacherConfColumns"/>
+		FROM t_school_teacher_conf a
+		<include refid="tSchoolTeacherConfJoins"/>
+		WHERE a.t_id = #{teacher.id}
+	</select>
+	
+	<select id="findList" resultType="TSchoolTeacherConf" >
+		SELECT 
+			<include refid="tSchoolTeacherConfColumns"/>
+		FROM t_school_teacher_conf a
+		<include refid="tSchoolTeacherConfJoins"/> 
+		and a.del_flag = #{DEL_FLAG_NORMAL}
+		<where>
+			t.isoto=1 and t.school_id = #{teacher.schoolId}
+			<if test="teacher.campus != null and teacher.campus.id!=null and teacher.campus.id!=''">
+				 and t.campus_id = #{teacher.campus.id} 
+			</if>
+			<if test="teacher != null and teacher.id!=null and teacher.id!=''">
+				AND a.t_id = #{teacher.id}
+			</if>
+			<if test="teacher.name != null and teacher.name != ''">
+				AND t.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{teacher.name}||'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{teacher.name},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="TSchoolTeacherConf" >
+		SELECT 
+			<include refid="tSchoolTeacherConfColumns"/>
+		FROM t_school_teacher_conf a
+		<include refid="tSchoolTeacherConfJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO t_school_teacher_conf(
+			t_id,
+			price,
+			cmin,
+			rmin,
+			ism,
+			mtime,
+			emtime,
+			isa,
+			atime,
+			eatime,
+			isn,
+			ntime,
+			entime,
+			mon,
+			tue,
+			wed,
+			thu,
+			fri,
+			sat,
+			sun,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{teacher.id},
+			#{price},
+			#{cmin},
+			#{rmin},
+			#{ism},
+			#{mtime},
+			#{emtime},
+			#{isa},
+			#{atime},
+			#{eatime},
+			#{isn},
+			#{ntime},
+			#{entime},
+			#{mon},
+			#{tue},
+			#{wed},
+			#{thu},
+			#{fri},
+			#{sat},
+			#{sun},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE t_school_teacher_conf SET 	
+			t_id = #{teacher.id},
+			price = #{price},
+			cmin = #{cmin},
+			rmin = #{rmin},
+			ism = #{ism},
+			mtime = #{mtime},
+			emtime = #{emtime},
+			isa = #{isa},
+			atime = #{atime},
+			eatime = #{eatime},
+			isn = #{isn},
+			ntime = #{ntime},
+			entime = #{entime},
+			mon = #{mon},
+			tue = #{tue},
+			wed = #{wed},
+			thu = #{thu},
+			fri = #{fri},
+			sat = #{sat},
+			sun = #{sun},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateStuCount">
+		UPDATE t_school_teacher_conf SET stu_count = #{stuCount}
+		WHERE id = #{id}
+	</update>
+	 
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM t_school_teacher_conf
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE t_school_teacher_conf SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="TSchoolTeacherConf" statementType="STATEMENT">
+		select * FROM t_school_teacher_conf  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>
